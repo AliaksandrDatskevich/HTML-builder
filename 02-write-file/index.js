@@ -1,54 +1,42 @@
 const fs = require('fs');
 const path = require('path');
+const filePath = path.join(__dirname, 'text.txt');
 const { stdout } = process;
-const readline = require( 'node:readline' );
-const {
-  stdin: input,
-  stdout: output,
-} = require( 'node:process' );
-const rl = readline.createInterface({ input, output });
+const readline = require('node:readline');
+const { stdin, stdout: output } = process;
 
-fs.writeFile(
-  path.join(__dirname, 'text.txt'),
-  '',
-  (err) => {
-    if (err) throw err;
-  }
-);
-stdout.write(`Hi!\nFile created.\n`);
+fs.writeFile(filePath, '', (err) => {
+  if (err) throw err;
+  stdout.write(`Hi!\nFile created.\n`);
 
-rl.question('Enter text:\n', (answer) => {
-  if (input === 'exit') {
-    rl.close();
-  } else {
-    fs.writeFile(
-      path.join(__dirname, 'text.txt'),
-      `${answer}\n`,
-      (err) => {
-        if (err) throw err;
-      }
-    );
-    stdout.write(`Added text: ${answer}\n`);
-  }
+  const rl = readline.createInterface({ input: stdin, output });
 
-  rl.on('line', (input => {
-    if (input === 'exit') {
+  rl.question('Enter text:\n', (answer) => {
+    if (answer.trim().toLowerCase() === 'exit') {
       rl.close();
+      return;
     } else {
-      fs.appendFile(
-        path.join(__dirname, 'text.txt'),
-        `${input}\n`,
-        (err) => {
-          if (err) throw err;
-          stdout.write(`Added text: ${input}\n`);
-        }
-      );
+      fs.writeFile(filePath, `${answer}\n`, (err) => {
+        if (err) throw err;
+        stdout.write(`Added text: ${answer}\n`);
+      });
     }
-  }));
 
+    rl.on('line', (line) => {
+      if (line.trim().toLowerCase() === 'exit') {
+        rl.close();
+        return;
+      } else {
+        fs.appendFile(filePath, `${line}\n`, (err) => {
+          if (err) throw err;
+          stdout.write(`Added text: ${line}\n`);
+        });
+      }
+    });
+  });
+
+  rl.on('close', () => {
+    stdout.write('See you soon!\n');
+    process.exit(0);
+  });
 });
-
-rl.on('close', (input) => {
-  stdout.write('See you soon!');
-  process.exit(0);
-})
